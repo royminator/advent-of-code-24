@@ -1,17 +1,12 @@
 defmodule AdventOfCode24.Day1 do
+  import AdventOfCode24.Common
+
   def main do
-    input = read_input_to_lists("res/input/day1.txt")
+    input = read_and_parse_input("res/input/day1.txt", &parse_input/1)
 
     {input
      |> calculate_distance()
      |> Enum.sum(), input |> similarity_score}
-  end
-
-  def read_input_to_lists(path) do
-    case File.read(path) do
-      {:ok, content} -> parse_input(content)
-      {:error, reason} -> IO.puts("failed to read the file: #{reason}")
-    end
   end
 
   def parse_input(content) do
@@ -24,12 +19,6 @@ defmodule AdventOfCode24.Day1 do
 
   def sort_both({list1, list2}) do
     {Enum.sort(list1), Enum.sort(list2)}
-  end
-
-  def line_to_list_of_ints(line) do
-    line
-    |> String.split(" ", trim: true)
-    |> Enum.map(&String.to_integer/1)
   end
 
   def calculate_distance({list1, list2}) do
