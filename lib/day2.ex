@@ -5,13 +5,13 @@ defmodule AdventOfCode24.Day2 do
     defstruct prev: 0,
               dir: :undefined,
               is_initial: true,
-              is_safe: false,
-              n_fails: 0
+              is_safe: true,
+              report: []
   end
 
   def main do
     input = read_and_parse_input("res/input/day2.txt", &parse_input/1)
-    {input |> part1}
+    {input |> part1, input |> part2}
   end
 
   def parse_input(content) do
@@ -21,18 +21,42 @@ defmodule AdventOfCode24.Day2 do
 
   def part1(reports) do
     reports
-    |> Enum.map(&check_safety/1)
+    |> Enum.map(&is_safe/1)
     |> Enum.filter(fn safety -> safety.is_safe end)
     |> Enum.count()
   end
 
-  def check_safety(report) do
-    Enum.reduce_while(report, %ReportSafety{}, &process_next/2)
+  def part2(reports) do
+    n_safe = part1(reports)
+
+    n_safe + (
+      reports
+      |> Enum.map(&is_safe/1)
+      |> Enum.filter(fn safety -> !safety.is_safe end)
+      |> Enum.map(fn s -> s.report end)
+      |> Enum.map(&problem_dampened/1)
+      |> Enum.filter(fn x -> x end)
+      |> Enum.count()
+    )
+  end
+
+  def problem_dampened(failing) do
+    failing
+    |> Enum.with_index()
+    |> Enum.map(fn {_, i} ->
+      is_safe(List.delete_at(failing, i))
+    end)
+    |> Enum.filter(fn s -> s.is_safe end)
+    |> Enum.count() > 0
+  end
+
+  def is_safe(report) do
+    Enum.reduce(report, %ReportSafety{report: report}, &process_next/2)
   end
 
   def process_next(val, acc) do
     case acc.is_initial do
-      true -> {:cont, %{prev: val, dir: :undefined, is_safe: true, is_initial: false}}
+      true -> %{acc | prev: val, is_initial: false}
       false -> is_report_still_safe(val, acc)
     end
   end
@@ -41,11 +65,11 @@ defmodule AdventOfCode24.Day2 do
     diff = acc.prev - val
     dir = get_dir(diff)
     case dir == :undefined || direction_was_swapped(acc.dir, dir) do
-      true -> {:halt, %ReportSafety{is_safe: false}}
+      true -> %{acc | prev: val, dir: dir, is_safe: false}
       false ->
         case is_valid_diff(diff, dir) do
-          true -> {:cont, %{prev: val, dir: dir, is_safe: true, is_initial: false}}
-          false -> {:halt, %{is_safe: false, is_initial: false}}
+          true -> %{acc | prev: val, dir: dir}
+          false -> %{acc | prev: val, dir: dir, is_safe: false}
         end
     end
   end
