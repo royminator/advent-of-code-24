@@ -69,4 +69,9 @@ defmodule AdventOfCode24.Day4.Tests do
     assert diag_nw(example_input(), 9, 9, 10, 10)
     assert diag_nw(example_input(), 9, 3, 10, 10)
   end
+
+  test "match xmas at" do
+    assert is_x_of_mas(example_input(), 1, 2)
+    assert is_x_of_mas(example_input(), 7, 7)
+  end
 end
